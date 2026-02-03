@@ -1,0 +1,26 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class My_Controller extends CI_Controller {
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        
+        // Maintenance dulu
+        $this->load->helper('maintenance');
+        maintenance_check();
+
+        // 🔒 Cek database
+        $this->load->helper('db_check');
+        db_check();
+
+        // (opsional) timezone
+        date_default_timezone_set('Asia/Jakarta');
+    }
+}
+
+
+
+

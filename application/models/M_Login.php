@@ -7,7 +7,7 @@ class M_Login extends CI_Model
 	parent::__construct();
 	}
 	
-   public function get_by_username($username)
+    public function get_by_username($username)
     {
     $this->db->where('username', $username);
     return $this->db->get('tbl_user')->row();
@@ -29,6 +29,53 @@ class M_Login extends CI_Model
                      ->where('username', $username)
                      ->update('tbl_user');
         }
+    }
+
+    public function check_login_limit($username, $ip, $max = 5, $lock = 600)
+    {
+        $row = $this->db->get_where('login_attempts', [
+            'username' => $username,
+            'ip_address' => $ip
+        ])->row();
+
+        if ($row) {
+            if ($row->attempts >= $max) {
+                if (time() - strtotime($row->last_attempt) < $lock) {
+                    return FALSE; // masih terkunci
+                }
+            }
+        }
+        return TRUE;
+    }
+
+    public function increase_attempt($username, $ip)
+    {
+        $row = $this->db->get_where('login_attempts', [
+            'username' => $username,
+            'ip_address' => $ip
+        ])->row();
+
+        if ($row) {
+            $this->db->update('login_attempts', [
+                'attempts' => $row->attempts + 1,
+                'last_attempt' => date('Y-m-d H:i:s')
+            ], ['id' => $row->id]);
+        } else {
+            $this->db->insert('login_attempts', [
+                'username' => $username,
+                'ip_address' => $ip,
+                'attempts' => 1,
+                'last_attempt' => date('Y-m-d H:i:s')
+            ]);
+        }
+    }
+
+    public function reset_attempt($username, $ip)
+    {
+        $this->db->delete('login_attempts', [
+            'username' => $username,
+            'ip_address' => $ip
+        ]);
     }
 
 }

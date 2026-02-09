@@ -226,9 +226,9 @@ $('#loginForm').on('submit',function(e){
 				showConfirmButton: false,
 				timer: 1800,
 				});
-				setTimeout(function () {
-					  location.reload();
-				}, 1900); 
+				// setTimeout(function () {
+				// 	  location.reload();
+				// }, 1900); 
 		}
 		}
 		);

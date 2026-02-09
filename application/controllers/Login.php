@@ -26,7 +26,19 @@ class Login extends My_Controller {
 
     $username = $this->input->post('username', TRUE);
     $password = $this->input->post('password', TRUE);
+    $ip = $this->input->ip_address();
 
+    if (!$this->M_Login->check_login_limit($username, $ip)) {
+        $this->_response([
+            'status' => 'error',
+            'message' => 'Terlalu banyak percobaan login. Silakan coba lagi nanti.',
+            'csrf' => [
+                'name' => $this->security->get_csrf_token_name(),
+                'hash' => $this->security->get_csrf_hash()
+            ]
+        ]);
+    }
+ 
     if (empty($username) || empty($password)) {
         $res = [
             'status' => 'error',
@@ -101,10 +113,12 @@ class Login extends My_Controller {
             ];
         }
     } else {
-        // Username tidak ditemukan
+
+       $this->M_Login->increase_attempt($username, $ip);
+
         $res = [
             'status' => 'error',
-            'message' => 'Akun tidak ditemukan.',
+            'message' => 'Username atau Password salah.',
             'csrf' => [
                 'name' => $this->security->get_csrf_token_name(),
                 'hash' => $this->security->get_csrf_hash()
@@ -124,14 +138,34 @@ class Login extends My_Controller {
 	}
 
 
- 
-	public function logout()
-		{ 
-			$params=array('id_user','level','username');
-			$this->session->unset_userdata($params);
-		    create_log_activity(user()->username.' telah melakukan logout',user()->username,$_SERVER['REQUEST_URI'],$_SERVER['HTTP_USER_AGENT']);
-           redirect('login');
-		} 
+ public function logout()
+{
+    // Simpan data user SEBELUM session dihapus
+    $username = user()->username ?? 'unknown';
+
+    // Log activity dulu
+    create_log_activity(
+        $username . ' telah melakukan logout',
+        $username,
+        current_url(),
+        $this->input->user_agent()
+    );
+
+    // Hapus semua session user
+    $this->session->unset_userdata([
+        'id_user',
+        'level',
+        'username'
+    ]);
+
+    // Hancurkan session (PALING PENTING)
+    $this->session->sess_destroy();
+
+    // Regenerate session ID
+    session_regenerate_id(true);
+
+    redirect('login');
+} 
 
 }
 /* End of file Blog.php */

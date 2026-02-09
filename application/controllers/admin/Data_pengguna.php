@@ -229,8 +229,13 @@ class Data_pengguna extends My_Controller {
    
 	public function delete($id=0)
 	{ 
+            $kode = aes_decrypt_id($id); 
+            $cek = $this->db
+            ->where('id_user', $kode)
+            ->get('tbl_user')
+            ->row_array();
+
             if (user()->level =="admin"){ 
-            $cek=$this->db->query("SELECT * FROM tbl_user where id_user='".aes_decrypt_id($id)."'")->row_array();
             if ($cek['username']!="admin"){
 		    $this->db->where('id_user', aes_decrypt_id($id));
             $this->db->delete('tbl_user');

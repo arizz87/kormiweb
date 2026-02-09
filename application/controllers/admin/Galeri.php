@@ -216,7 +216,7 @@ class Galeri extends My_Controller {
             'id_galeri'           =>  $noUrut, 
 			'galeri_tgl' 		    =>  $tanggal.' '.$waktu,
 			'galeri_tgl_edit' 	=>  $tanggal, 
-			'galeri_author'	    =>  htmlentities($author),
+			'galeri_author'	    =>  htmlentities(user()->nama_pengguna),
 			'judul_galeri'	    =>	htmlentities($judul), 
 			'galeri_img'	        =>	$file_Galeri ?? '', 
 			'user_id'	        =>  user()->id_user,
@@ -292,7 +292,7 @@ class Galeri extends My_Controller {
               $data = array(  
 			        'galeri_tgl' 	    =>  $tanggal.' '.$waktu,
 			        'galeri_tgl_edit' 	=>  $tanggal, 
-			        'galeri_author'	    =>  htmlentities($author),
+			        'galeri_author'	    =>  htmlentities(user()->nama_pengguna),
 			        'judul_galeri'	    =>	htmlentities($judul),
 			        'user_id'	        =>  user()->id_user,
 			        'tampil'           =>  $posting
@@ -421,7 +421,12 @@ class Galeri extends My_Controller {
    
 	public function delete($id=0)
 	{
-		$blog=$this->db->query("SELECT * FROM tbl_galeri where id_galeri='".aes_decrypt_id($id)."'")->row_array();   
+            $kode = aes_decrypt_id($id); 
+            $blog = $this->db
+            ->where('id_galeri', $kode)
+            ->get('tbl_galeri')
+            ->row_array();
+
             if (!empty($blog['galeri_img'])) {
             $old_path = FCPATH . './storage/gambar/' . $blog['galeri_img'];
             if (file_exists($old_path) && is_file($old_path)) {

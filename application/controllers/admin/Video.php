@@ -418,7 +418,12 @@ class Video extends My_Controller {
    
 	public function delete($id=0)
 	{
-		$blog=$this->db->query("SELECT * FROM tbl_video where id_video='".aes_decrypt_id($id)."'")->row_array();   
+            $kode = aes_decrypt_id($id); 
+            $blog = $this->db
+            ->where('id_video', $kode)
+            ->get('tbl_video')
+            ->row_array();
+ 
             if (!empty($blog['video_img'])) {
             $old_path = FCPATH . './storage/gambar/' . $blog['video_img'];
             if (file_exists($old_path) && is_file($old_path)) {

@@ -1,4 +1,11 @@
 <?php
+$env = __DIR__.'/.env';
+if (file_exists($env)) {
+    foreach (file($env, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        putenv(trim($line));
+    }
+}
 /**
  * CodeIgniter
  *

@@ -223,7 +223,7 @@ class Berita extends My_Controller {
             'blog_slug'         =>  create_slug(strtolower($judul)).'-'.mt_rand(),
 			'blog_tgl' 		    =>  $tanggal.' '.$waktu,
 			'blog_tgl_edit' 	=>  $tanggal, 
-			'blog_author'	    =>  htmlentities($author),
+			'blog_author'	    =>  htmlentities(user()->nama_pengguna),
 			'blog_title'	    =>	htmlentities($judul),
 			'blog_isi'	        =>	$berita_isi, 
 			'blog_img'	        =>	$file_berita ?? '', 
@@ -307,7 +307,7 @@ class Berita extends My_Controller {
                     'blog_slug'         =>  create_slug(strtolower($judul)).'-'.mt_rand(),
 			        'blog_tgl' 		    =>  $tanggal.' '.$waktu,
 			        'blog_tgl_edit' 	=>  $tanggal, 
-			        'blog_author'	    =>  htmlentities($author),
+			        'blog_author'	    =>  htmlentities(user()->nama_pengguna),
 			        'blog_title'	    =>	htmlentities($judul),
 			        'blog_isi'	        =>	$berita_isi,  
 			        'user_id'	        =>  user()->id_user,
@@ -362,7 +362,13 @@ class Berita extends My_Controller {
         * UPLOAD FILE KE FOLDER
         * ================================ */
         if ($allow_upload1) { 
-            $cek=$this->db->query("SELECT * FROM tbl_blog where id_blog='".aes_decrypt_id($id)."'")->row_array();
+            $kode = aes_decrypt_id($id);
+
+            $cek = $this->db
+            ->where('id_blog', $kode)
+            ->get('tbl_blog')
+            ->row_array();
+ 
             if (!empty($cek['blog_img'])) {
             $old_path = FCPATH . './storage/gambar/' . $cek['blog_img'];
             if (file_exists($old_path) && is_file($old_path)) {
@@ -437,7 +443,12 @@ class Berita extends My_Controller {
    
 	public function delete($id=0)
 	{
-		$blog=$this->db->query("SELECT * FROM tbl_blog where id_blog='".aes_decrypt_id($id)."'")->row_array();   
+            $kode = aes_decrypt_id($id); 
+            $blog = $this->db
+            ->where('id_blog', $kode)
+            ->get('tbl_blog')
+            ->row_array();
+            
             if (!empty($blog['blog_img'])) {
             $old_path = FCPATH . './storage/gambar/' . $blog['blog_img'];
             if (file_exists($old_path) && is_file($old_path)) {

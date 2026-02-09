@@ -89,46 +89,61 @@ if (!function_exists('decode_id')) {
     }
 }
 
-/* CONFIGURASI AES ENKRIPSI*/
-const ENC_METHOD = 'AES-256-CBC';
-const ENC_KEY    = 'sLd82Kdl92mDD992kdklA882kkw91KKsslqQq223LLz994hf92hf2h92hf92hf928hf9';    // min 32 char
-const ENC_IV     = '1234567890ABCDEF';                   // 16 byte FIXED IV
- 
+
 if (!function_exists('aes_encrypt_id')) {
     function aes_encrypt_id($id)
     {
-        $encrypted = openssl_encrypt(
-            $id,
-            ENC_METHOD,
-            ENC_KEY,
+        $method = getenv('APP_ENC_METHOD');
+        $key    = getenv('APP_ENC_KEY');
+
+        if (!$method || !$key) {
+            throw new Exception('Encryption key not configured');
+        }
+
+        // IV random (AMAN)
+        $iv = random_bytes(openssl_cipher_iv_length($method));
+
+        $cipher = openssl_encrypt(
+            (string)$id,
+            $method,
+            $key,
             OPENSSL_RAW_DATA,
-            ENC_IV
+            $iv
         );
 
-        // Base64URL encode
-        $base64 = base64_encode($encrypted);
-        return rtrim(strtr($base64, '+/', '-_'), '=');
+        // Gabungkan IV + cipher
+        $payload = $iv . $cipher;
+
+        // Base64 URL Safe
+        return rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
     }
 }
  
 if (!function_exists('aes_decrypt_id')) {
     function aes_decrypt_id($hash)
     {
-        // Base64URL decode
-        $base64 = strtr($hash, '-_', '+/');
-        $pad = strlen($base64) % 4;
-        if ($pad > 0) {
-            $base64 .= str_repeat('=', 4 - $pad);
+        $method = getenv('APP_ENC_METHOD');
+        $key    = getenv('APP_ENC_KEY');
+
+        if (!$method || !$key) {
+            throw new Exception('Encryption key not configured');
         }
 
-        $decoded = base64_decode($base64);
+        // Base64 URL decode
+        $data = base64_decode(strtr($hash, '-_', '+/'));
+
+        $ivLength = openssl_cipher_iv_length($method);
+
+        // Ambil IV & cipher
+        $iv     = substr($data, 0, $ivLength);
+        $cipher = substr($data, $ivLength);
 
         return openssl_decrypt(
-            $decoded,
-            ENC_METHOD,
-            ENC_KEY,
+            $cipher,
+            $method,
+            $key,
             OPENSSL_RAW_DATA,
-            ENC_IV
+            $iv
         );
     }
 }
